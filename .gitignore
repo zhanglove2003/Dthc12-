@@ -1,0 +1,33 @@
+# Keil project build files
+MDK-ARM/GetTemp_Hum/
+MDK-ARM/*.bak
+MDK-ARM/*.dep
+MDK-ARM/DebugConfig/
+*.uvguix.*
+*.uvoptx
+
+# CMake/GCC build files
+build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# STM32CubeMX generated files to ignore (optional)
+mx.scratch
+.mxproject
+
+# VSCode
+.vscode/
+
+# Other
+*.hex
+*.bin
+*.elf
+*.map
+*.o
+*.d
+*.crf
+*.htm
+*.lnp
+*.sct
