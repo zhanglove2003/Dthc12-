@@ -94,23 +94,42 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_Delay(1000);
+  DHTC12_Status init_status = DHTC12_Init();
+  char msg[160];
+  if (init_status == DHTC12_OK)
+  {
+    sprintf(msg, "DHTC12 Init OK, cal=%s\r\n", DHTC12_UsingCalibration() ? "YES" : "NO");
+  }
+  else if (init_status == DHTC12_ERR_CALIB)
+  {
+    sprintf(msg, "DHTC12 Init OK, cal=NO, using linear humidity fallback\r\n");
+  }
+  else
+  {
+    sprintf(msg, "DHTC12 Init Failed: %s, hal_error=0x%08X\r\n",
+            DHTC12_StatusString(init_status), (unsigned int)DHTC12_LastHalError());
+  }
+  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), 100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   DHT12_Data sensor;
-  char msg[64];
   while (1)
   {
-    uint8_t ret = DHT12_Read(&sensor);
+    DHTC12_Status ret = DHT12_Read(&sensor);
 
     if (ret == 0)
-      sprintf(msg, "Temp: %.1fC, Hum: %.1f%%\r\n", sensor.temperature, sensor.humidity);
-    else if (ret == 2)
-      sprintf(msg, "I2C err\r\n");
+      sprintf(msg, "Temp: %.1fC, Hum: %.1f%%, cal=%s\r\n",
+              sensor.temperature, sensor.humidity, sensor.used_calibration ? "YES" : "NO");
+    else if (ret == DHTC12_ERR_CRC)
+      sprintf(msg, "DHTC12 %s, hal_error=0x%08X, raw=%02X %02X %02X %02X %02X %02X\r\n",
+              DHTC12_StatusString(ret), (unsigned int)sensor.hal_error,
+              sensor.raw[0], sensor.raw[1], sensor.raw[2],
+              sensor.raw[3], sensor.raw[4], sensor.raw[5]);
     else
-      sprintf(msg, "CRC err: %02X %02X %02X %02X %02X %02X\r\n",
-        sensor.raw[0], sensor.raw[1], sensor.raw[2], sensor.raw[3], sensor.raw[4], sensor.raw[5]);
+      sprintf(msg, "DHTC12 %s, hal_error=0x%08X\r\n",
+              DHTC12_StatusString(ret), (unsigned int)sensor.hal_error);
 
     HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), 100);
     HAL_Delay(2000);
